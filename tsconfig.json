@@ -6,6 +6,6 @@
       "outDir": "./lib",
       "strict": true
     },
-    "include": ["src"],
+    "include": ["src","transformer-proxy.d.ts"],
     "exclude": ["node_modules", "**/__tests__/*"]
   }

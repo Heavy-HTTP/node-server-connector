@@ -2,9 +2,10 @@
   "name": "@heavy-http/node-server-connector",
   "version": "0.1.0",
   "description": "A connector for the Node servers to handle heavy HTTP requests and responses",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -28,5 +29,7 @@
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.8.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "transformer-proxy": "^0.3.5"
+  }
 }
