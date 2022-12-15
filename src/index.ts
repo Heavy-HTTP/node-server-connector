@@ -1,4 +1,4 @@
-import { X_HEAVY_HTTP_ACTION, X_HEAVY_HTTP_ACTIONS, X_HEAVY_HTTP_ID } from "./constant";
+import { X_HEAVY_HTTP_ACTION, X_HEAVY_HTTP_ACTIONS, X_HEAVY_HTTP_ID,HEAVY_RESPONSE } from "./constant";
 import { IncomingMessage, ServerResponse } from "http";
 const transformerProxy = require("transformer-proxy");
 const crypto = require("crypto");
@@ -60,7 +60,7 @@ export const connector = (connectorConfig: ConnectorConfig, transporter: Transpo
                         res.setHeader(X_HEAVY_HTTP_ACTION, X_HEAVY_HTTP_ACTIONS.DOWNLOAD)
                         res.setHeader(X_HEAVY_HTTP_ID, heavyHTTPId);
                     }
-                    return `X_HEAVY_RESPONSE|${heavyHTTPId}|${signedURL}`;
+                    return `${HEAVY_RESPONSE}|${heavyHTTPId}|${signedURL}`;
                 }
             } catch (error) {
                 silentErrorHanlderWrapper(new Error("Heavy HTTP Response Failed, caused by: " + (error as Error).stack + "\n"))

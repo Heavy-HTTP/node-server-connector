@@ -1,5 +1,5 @@
 import { connector } from '../index';
-import { X_HEAVY_HTTP_ACTION, X_HEAVY_HTTP_ACTIONS, X_HEAVY_HTTP_ID } from "../constant";
+import { X_HEAVY_HTTP_ACTION, X_HEAVY_HTTP_ACTIONS, X_HEAVY_HTTP_ID, HEAVY_RESPONSE } from "../constant";
 import * as transformerProxy from 'transformer-proxy';
 import * as crypto from 'crypto';
 
@@ -57,7 +57,7 @@ describe('connector-response handler test suite ', () => {
       getHeader: () => 'ABCS'
     }
     const { responseHandler, requestHandler } = connector({ responseSize: 1 }, transporter)
-    expect(await responseHandler("111111", request, response)).toBe("X_HEAVY_RESPONSE|222222|testURL");
+    expect(await responseHandler("111111", request, response)).toBe(`${HEAVY_RESPONSE}|222222|testURL`);
     expect(isExecuted).toBe(true)
     expect(headersList).toStrictEqual([
       { header: 'x-heavy-http-action', value: 'download' },
@@ -86,7 +86,7 @@ describe('connector-response handler test suite ', () => {
       getHeader: () => { }
     }
     const { responseHandler, requestHandler } = connector({ responseSize: 1 }, transporter)
-    expect(await responseHandler("111111", request, response)).toBe("X_HEAVY_RESPONSE|222222|testURL");
+    expect(await responseHandler("111111", request, response)).toBe(`${HEAVY_RESPONSE}|222222|testURL`);
     expect(isExecuted).toBe(true)
     expect(headersList).toStrictEqual([])
   });
