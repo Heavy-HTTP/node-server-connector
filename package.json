@@ -2,7 +2,7 @@
   "name": "@heavy-http/node-server-connector",
   "version": "0.1.0",
   "description": "A connector for the Node servers to handle heavy HTTP requests and responses",
-  "main": "lib/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "jest --coverage",
     "build": "tsc"
