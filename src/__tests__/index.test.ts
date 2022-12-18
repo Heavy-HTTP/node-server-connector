@@ -13,9 +13,9 @@ beforeEach(() => {
 
 describe('connector test suite ', () => {
 
-  test('connector fails with negative response size', () => {
+  test('connector fails with negative response threshold', () => {
     const transporter: any = {}
-    expect(() => connector({ responseSize: -1 }, transporter)).toThrow(Error("Response Size must be a non-negative value"));
+    expect(() => connector({ responseThreshold: -1 }, transporter)).toThrow(Error("Response Threshold must be a non-negative value"));
   });
 })
 
@@ -26,26 +26,22 @@ describe('connector-response handler test suite ', () => {
     mockedDependency.mockImplementationOnce(fn => fn)
     let isExecuted = false;
     const transporter: any = {
-      uploadPayload: () => {
+      handleHeavyResponseBody: () => {
         isExecuted = true;
       }
     }
     const request: any = {}
     const response: any = {}
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     expect(await responseHandler("111111", request, response)).toBe("111111");
     expect(isExecuted).toBe(false)
   });
 
   test('response is modified when size is above the defined response size without headers sent', async () => {
     mockedDependency.mockImplementationOnce(fn => fn)
-    let isExecuted = false;
     const transporter: any = {
-      generateDownloadURL: async () => {
+      handleHeavyResponseBody: async () => {
         return 'testURL'
-      },
-      uploadPayload: async () => {
-        isExecuted = true;
       }
     }
 
@@ -56,9 +52,8 @@ describe('connector-response handler test suite ', () => {
       setHeader: (header: any, value: any) => { headersList.push({ header, value }) },
       getHeader: () => 'ABCS'
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 1 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 1 }, transporter)
     expect(await responseHandler("111111", request, response)).toBe(`${HEAVY_RESPONSE}|222222|testURL`);
-    expect(isExecuted).toBe(true)
     expect(headersList).toStrictEqual([
       { header: 'x-heavy-http-action', value: 'download' },
       { header: 'x-heavy-http-id', value: '222222' }
@@ -68,15 +63,12 @@ describe('connector-response handler test suite ', () => {
   test('response is modified when size is above the defined response size with headers already sent', async () => {
 
     mockedDependency.mockImplementationOnce(fn => fn)
-    let isExecuted = false;
     const transporter: any = {
-      generateDownloadURL: async () => {
+      handleHeavyResponseBody: async () => {
         return 'testURL'
-      },
-      uploadPayload: async () => {
-        isExecuted = true;
       }
     }
+
 
     const headersList: any[] = []
     const request: any = {}
@@ -85,9 +77,8 @@ describe('connector-response handler test suite ', () => {
       setHeader: (header: any, value: any) => { headersList.push({ header, value }) },
       getHeader: () => { }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 1 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 1 }, transporter)
     expect(await responseHandler("111111", request, response)).toBe(`${HEAVY_RESPONSE}|222222|testURL`);
-    expect(isExecuted).toBe(true)
     expect(headersList).toStrictEqual([])
   });
 
@@ -95,14 +86,10 @@ describe('connector-response handler test suite ', () => {
     let errorData: any = null;
     console.error = jest.fn().mockImplementation(error => errorData = error);
     mockedDependency.mockImplementationOnce(fn => fn)
-    let isExecuted = false;
     const transporter: any = {
-      generateDownloadURL: async () => {
+      handleHeavyResponseBody: async () => {
         throw new Error('Mock Failed')
       },
-      uploadPayload: async () => {
-        isExecuted = true;
-      }
     }
 
     const headersList: any[] = []
@@ -112,9 +99,8 @@ describe('connector-response handler test suite ', () => {
       setHeader: (header: any, value: any) => { headersList.push({ header, value }) },
       getHeader: () => { }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 1 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 1 }, transporter)
     expect(await responseHandler("111111", request, response)).toBe("111111");
-    expect(isExecuted).toBe(true)
     expect(headersList).toStrictEqual([])
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(errorData).toBeInstanceOf(Error)
@@ -126,16 +112,11 @@ describe('connector-response handler test suite ', () => {
     let errorData: any = null;
     console.error = jest.fn();
     mockedDependency.mockImplementationOnce(fn => fn)
-    let isExecuted = false;
     const transporter: any = {
-      generateDownloadURL: async () => {
+      handleHeavyResponseBody: async () => {
         throw new Error('Mock Failed')
       },
-      uploadPayload: async () => {
-        isExecuted = true;
-      }
     }
-
     const headersList: any[] = []
     const request: any = {}
     const response: any = {
@@ -143,9 +124,8 @@ describe('connector-response handler test suite ', () => {
       setHeader: (header: any, value: any) => { headersList.push({ header, value }) },
       getHeader: () => { }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 1 }, transporter, (error) => { errorData = error })
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 1 }, transporter, (error) => { errorData = error })
     expect(await responseHandler("111111", request, response)).toBe("111111");
-    expect(isExecuted).toBe(true)
     expect(headersList).toStrictEqual([])
     expect(console.error).toHaveBeenCalledTimes(0);
     expect(errorData).toBeInstanceOf(Error)
@@ -162,7 +142,7 @@ describe('connector-request handler test suite ', () => {
 
     let isExecuted = false;
 
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, () => { isExecuted = true; });
     expect(isExecuted).toBe(true);
   });
@@ -174,7 +154,7 @@ describe('connector-request handler test suite ', () => {
 
     let errorDetails = null;
 
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, (error: any) => { errorDetails = error; });
     expect(errorDetails).toBeInstanceOf(Error);
   });
@@ -186,7 +166,7 @@ describe('connector-request handler test suite ', () => {
       generateUploadURL: async () => { }
     }
     let errorDetails = null;
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, (error: any) => { errorDetails = error })
     expect(errorDetails).toBeInstanceOf(Error);
   });
@@ -200,7 +180,7 @@ describe('connector-request handler test suite ', () => {
       }
     }
     let errorDetails = null;
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, (error: any) => { errorDetails = error })
     expect(errorDetails).toBeInstanceOf(Error);
   });
@@ -222,7 +202,7 @@ describe('connector-request handler test suite ', () => {
         return "testURL"
       }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, () => { })
     expect(isExecuted).toBe(true);
     expect(responseData).toBe('testURL');
@@ -230,6 +210,7 @@ describe('connector-request handler test suite ', () => {
 
   test('request middleware sends failure message in the send-error flow', async () => {
     let isExecuted = false;
+    let terminateReason:any = null;
     let responseData = null;
     let reponseCodeData = null;
     const request: any = {
@@ -242,11 +223,12 @@ describe('connector-request handler test suite ', () => {
       end: () => { isExecuted = true }
     }
     const transporter: any = {
-      deletePaylod: async () => { }
+      terminate: async (id:string, reason:string) => {terminateReason = reason; }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, () => { })
     expect(isExecuted).toBe(true);
+    expect(terminateReason).toBe(X_HEAVY_HTTP_ACTIONS.SEND_ERROR);
     expect(responseData).toBe('Heavy HTTP Request Failed');
     expect(reponseCodeData).toBe(500);
 
@@ -256,6 +238,7 @@ describe('connector-request handler test suite ', () => {
   test('request middleware sends complete message in the download-end flow', async () => {
     let isExecuted = false;
     let responseData = null;
+    let terminateReason:any = null;
     let reponseCodeData = null;
     const request: any = {
       headers: {
@@ -267,11 +250,12 @@ describe('connector-request handler test suite ', () => {
       end: () => { isExecuted = true }
     }
     const transporter: any = {
-      deletePaylod: async () => { }
+      terminate: async (id:string, reason:string) => {terminateReason = reason; }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, () => { })
     expect(isExecuted).toBe(true);
+    expect(terminateReason).toBe(X_HEAVY_HTTP_ACTIONS.DOWNLOAD_END);
     expect(responseData).toBe('Heavy HTTP Response Completed');
     expect(reponseCodeData).toBe(200);
 
@@ -293,9 +277,9 @@ describe('connector-request handler test suite ', () => {
       end: () => { isExecuted = true }
     }
     const transporter: any = {
-      deletePaylod: async () => { throw new Error('Mock error') }
+      terminate: async () => { throw new Error('Mock error') }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter, (error: any) => { errorData = error })
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter, (error: any) => { errorData = error })
     await requestHandler(request, response, () => { })
     expect(isExecuted).toBe(true);
     expect(responseData).toBe('Heavy HTTP Response Completed');
@@ -309,6 +293,7 @@ describe('connector-request handler test suite ', () => {
     let isExecuted = false;
     let responseData = null;
     let reponseCodeData = null;
+    let terminateReason:any = null;
     const request: any = {
       headers: {
         [X_HEAVY_HTTP_ACTION]: X_HEAVY_HTTP_ACTIONS.SEND_ABORT, [X_HEAVY_HTTP_ID]: '121212122'
@@ -319,12 +304,13 @@ describe('connector-request handler test suite ', () => {
       end: () => { isExecuted = true }
     }
     const transporter: any = {
-      deletePaylod: async () => { }
+      terminate: async (id:string, reason:string) => {terminateReason = reason; }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, () => { })
     expect(isExecuted).toBe(true);
     expect(responseData).toBe('Heavy HTTP Process Aborted');
+    expect(terminateReason).toBe(X_HEAVY_HTTP_ACTIONS.SEND_ABORT);
     expect(reponseCodeData).toBe(200);
 
   });
@@ -345,9 +331,9 @@ describe('connector-request handler test suite ', () => {
       end: () => { isExecuted = true }
     }
     const transporter: any = {
-      deletePaylod: async () => { throw new Error('Mock error') }
+      terminate: async () => { throw new Error('Mock error') }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter, (error: any) => { errorData = error })
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter, (error: any) => { errorData = error })
     await requestHandler(request, response, () => { })
     expect(isExecuted).toBe(true);
     expect(responseData).toBe('Heavy HTTP Process Aborted');
@@ -360,6 +346,7 @@ describe('connector-request handler test suite ', () => {
     let isExecuted = false;
     let responseData = null;
     let reponseCodeData = null;
+    let terminateReason:any = null;
     const request: any = {
       headers: {
         [X_HEAVY_HTTP_ACTION]: X_HEAVY_HTTP_ACTIONS.DOWNLOAD_ABORT, [X_HEAVY_HTTP_ID]: '121212122'
@@ -370,13 +357,15 @@ describe('connector-request handler test suite ', () => {
       end: () => { isExecuted = true }
     }
     const transporter: any = {
-      deletePaylod: async () => { }
+      terminate: async (id:string, reason:string) => {terminateReason = reason; }
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, () => { })
     expect(isExecuted).toBe(true);
     expect(responseData).toBe('Heavy HTTP Process Aborted');
     expect(reponseCodeData).toBe(200);
+    expect(terminateReason).toBe(X_HEAVY_HTTP_ACTIONS.DOWNLOAD_ABORT);
+
 
   });
 
@@ -397,10 +386,9 @@ describe('connector-request handler test suite ', () => {
     }
     const response: any = {}
     const transporter: any = {
-      deletePaylod: async () => { },
-      getPaylod: async () => ({ content: 'returnData', contentLength: 10, contentType: 'test-type' })
+      injectHeavyRequestBody: async () => ({ content: 'returnData', contentLength: 10, contentType: 'test-type' })
     }
-    const { responseHandler, requestHandler } = connector({ responseSize: 100 }, transporter)
+    const { responseHandler, requestHandler } = connector({ responseThreshold: 100 }, transporter)
     await requestHandler(request, response, () => { })
 
     request.emit('data', 'testData')

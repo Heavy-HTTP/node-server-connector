@@ -1,6 +1,6 @@
 {
   "name": "@heavy-http/node-server-connector",
-  "version": "0.1.0",
+  "version": "1.0.9",
   "description": "A connector for the Node servers to handle heavy HTTP requests and responses",
   "main": "index.js",
   "scripts": {
@@ -31,5 +31,8 @@
   },
   "dependencies": {
     "transformer-proxy": "^0.3.5"
+  },
+  "directories": {
+    "lib": "lib"
   }
 }

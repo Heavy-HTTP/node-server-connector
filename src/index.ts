@@ -5,7 +5,7 @@ const crypto = require("crypto");
 
 
 interface ConnectorConfig {
-    responseSize: number
+    responseThreshold: number
 }
 
 interface PayloadResponse {
@@ -17,18 +17,16 @@ interface PayloadResponse {
 
 interface Transporter {
     generateUploadURL: (id: string) => Promise<string>,
-    deletePaylod: (id: string) => Promise<void>,
-    getPaylod: (id: string) => Promise<PayloadResponse>,
-    uploadPayload: (id: string, content: Buffer, contentType: string | null) => Promise<void>,
-    generateDownloadURL: (id: string) => Promise<string>,
+    terminate: (id: string, terminationCode:string) => Promise<void>,
+    injectHeavyRequestBody: (id: string) => Promise<PayloadResponse>,
+    handleHeavyResponseBody: (id: string, content: Buffer, contentType: string | null) => Promise<string>,
 }
-
 
 
 export const connector = (connectorConfig: ConnectorConfig, transporter: Transporter, silentErrorHandler?: (error: Error) => void): any => {
 
-    if (connectorConfig.responseSize < 0) {
-        throw new Error("Response Size must be a non-negative value")
+    if (connectorConfig.responseThreshold < 0) {
+        throw new Error("Response Threshold must be a non-negative value")
     }
 
     function retriveHeavyHttpId(heavyHttpId: string | string[] | undefined) {
@@ -51,11 +49,12 @@ export const connector = (connectorConfig: ConnectorConfig, transporter: Transpo
     return {
         responseHandler: transformerProxy(async function (responseData: any, req: IncomingMessage, res: ServerResponse) {
             try {
-                if (Buffer.byteLength(responseData) > connectorConfig.responseSize) {
+                if (Buffer.byteLength(responseData) > connectorConfig.responseThreshold) {
 
                     const heavyHTTPId = crypto.randomBytes(4).toString('hex');
-                    await transporter.uploadPayload(heavyHTTPId, Buffer.from(responseData), res.getHeader('content-type')?.toString() || null);
-                    const signedURL = await transporter.generateDownloadURL(heavyHTTPId);
+
+                    const signedURL =   await transporter.handleHeavyResponseBody(heavyHTTPId, Buffer.from(responseData), res.getHeader('content-type')?.toString() || null);
+                    
                     if (!res.headersSent) {
                         res.setHeader(X_HEAVY_HTTP_ACTION, X_HEAVY_HTTP_ACTIONS.DOWNLOAD)
                         res.setHeader(X_HEAVY_HTTP_ID, heavyHTTPId);
@@ -84,7 +83,7 @@ export const connector = (connectorConfig: ConnectorConfig, transporter: Transpo
 
                     if (req.headers[X_HEAVY_HTTP_ACTION] === X_HEAVY_HTTP_ACTIONS.SEND_ERROR) {
                         const uniqueId = retriveHeavyHttpId(req.headers[X_HEAVY_HTTP_ID]);
-                        await transporter.deletePaylod(uniqueId);
+                        await transporter.terminate(uniqueId, X_HEAVY_HTTP_ACTIONS.SEND_ERROR);
                         res.writeHead(500, 'Heavy HTTP Request Failed');
                         return res.end();
 
@@ -93,7 +92,7 @@ export const connector = (connectorConfig: ConnectorConfig, transporter: Transpo
                     if (req.headers[X_HEAVY_HTTP_ACTION] === X_HEAVY_HTTP_ACTIONS.DOWNLOAD_END) {
                         const uniqueId = retriveHeavyHttpId(req.headers[X_HEAVY_HTTP_ID]);
                         try{
-                            await transporter.deletePaylod(uniqueId);
+                            await transporter.terminate(uniqueId, X_HEAVY_HTTP_ACTIONS.DOWNLOAD_END);
                         }catch(error){
                             silentErrorHanlderWrapper(new Error("Heavy HTTP Response Failed, caused by: " + (error as Error).stack + "\n"))
                         }
@@ -107,7 +106,7 @@ export const connector = (connectorConfig: ConnectorConfig, transporter: Transpo
                     if (req.headers[X_HEAVY_HTTP_ACTION] === X_HEAVY_HTTP_ACTIONS.SEND_ABORT || req.headers[X_HEAVY_HTTP_ACTION] === X_HEAVY_HTTP_ACTIONS.DOWNLOAD_ABORT) {
                         const uniqueId = retriveHeavyHttpId(req.headers[X_HEAVY_HTTP_ID]);
                         try{
-                            await transporter.deletePaylod(uniqueId);
+                            await transporter.terminate(uniqueId, req.headers[X_HEAVY_HTTP_ACTION]);
                         }catch(error){
                             silentErrorHanlderWrapper(new Error("Heavy HTTP Process Failed, caused by: " + (error as Error).stack + "\n"))
                         }
@@ -122,9 +121,7 @@ export const connector = (connectorConfig: ConnectorConfig, transporter: Transpo
 
                         const emitter = req.emit
 
-                        const item = await transporter.getPaylod(uniqueId);
-
-                        await transporter.deletePaylod(uniqueId);
+                        const item = await transporter.injectHeavyRequestBody(uniqueId);
 
                         req.headers['content-length'] = item.contentLength;
 
