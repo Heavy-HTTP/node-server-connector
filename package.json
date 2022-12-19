@@ -1,6 +1,6 @@
 {
   "name": "@heavy-http/node-server-connector",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A connector for the Node servers to handle heavy HTTP requests and responses",
   "main": "index.js",
   "scripts": {
