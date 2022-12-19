@@ -2,7 +2,8 @@
   "name": "@heavy-http/node-server-connector",
   "version": "1.0.10",
   "description": "A connector for the Node servers to handle heavy HTTP requests and responses",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest --coverage",
     "build": "tsc"
@@ -12,7 +13,7 @@
     "url": "git+https://github.com/Heavy-HTTP/node-server-connector.git"
   },
   "keywords": [
-    "http"
+    "http", "node"
   ],
   "author": "PasinduS",
   "license": "MIT",
