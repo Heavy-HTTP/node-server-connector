@@ -61,7 +61,7 @@ When sending the response to HTTP Client, Node Server Connector performs the fol
 * CORS\
     Heavy HTTP communication is based on *x-heavy-http-action* and *x-heavy-http-id* headers in the request and response. Hence if the server communicates with browsers those headers need to be configured in CORS. 
 
-* HeavyHTTP Connector\
+* Heavy-HTTP Connector\
     Heavy HTTP connector takes the following inputs in order to generate the middlewares
 
     * ConnectorConfig [Required]\
@@ -103,4 +103,4 @@ When sending the response to HTTP Client, Node Server Connector performs the fol
     It is not mandatory to attach both middlewares. But usage of one middleware would be highly unlikely.  When attaching those middlewares the recommended approach is to attach them at the beginning of the middleware chain right after the CORS. If there are any body-parsing middlewares Heavy HTTP middlewares must be attached before them. Attaching them at the top makes sense because the components which handle the business logic shouldn't be aware of the existence of the HTTP at all. 
 
 ### Cookies and Status Codes
-Setting cookies with response headers is fairly common in modern applications. Controlling the behavior of browsers with the response status codes is also used by most applications. Even though Node Server Connector uses multiple HTTP requests to send the response it wouldn't change any of the existing behaviors. So cookies and status codes will be delivered to the client as it without any issues. 
+Setting cookies with response headers is fairly common in modern applications. Controlling the behavior of browsers with the response status codes is also used by most applications. Even though Node Server Connector uses multiple HTTP requests to send the response it wouldn't change any of the existing behaviors. So cookies and status codes will be delivered to the client without any issues. 
