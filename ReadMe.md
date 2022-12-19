@@ -88,7 +88,13 @@ When sending the response to HTTP Client, Node Server Connector performs the fol
         ```
         The Transporter must be implemented by the developer. Before the implementation, it's recommended to go through the [Heavy-HTTP/transporters](https://github.com/Heavy-HTTP/transporters#readme) repository to grasp the concept of the Transporter.
 
-        There are already implemented transporters in the [Heavy-HTTP/transporters](https://github.com/Heavy-HTTP/transporters) repository. If they suit your purpose you can use them as well. 
+        There are already implemented transporters in the [Heavy-HTTP/transporters](https://github.com/Heavy-HTTP/transporters) repository. If they suit the developer's purpose developer can use them as well. 
+
+    * SilentErrorHandler [Optional]\
+        When there are multiple HTTP requests there can be multiple failures as well. With Heavy HTTP, not all failures are catastrophic for the request/response life cycle. So in case of exception Node Server Connector would not break the flow unless it is absolutely required. The non-breaking failures are known as silent failures. By default Node Server Connector logs the issue to the standard output buffer and continues. But if the developer wants to perform some action (ex: Logging) on those silent failures the SilentErrorHandler is the key to that. The SilentErrorHandler is function with the  signature of  ```(error: Error) => void)```. The following failures would be considered as silent failures.
+        1. Failures in response download complete confirmation.
+        2. Failures in a response signed URL generation (Orignal response will be sent to the client).
+        3. Failures in acknowledgment of response or request aborts.
 
 
 * Middlewares\
