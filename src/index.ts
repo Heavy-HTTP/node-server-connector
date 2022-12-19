@@ -8,7 +8,7 @@ interface ConnectorConfig {
     responseThreshold: number
 }
 
-interface PayloadResponse {
+interface Payload {
     contentLength: string,
     contentType: string,
     content: Buffer
@@ -18,7 +18,7 @@ interface PayloadResponse {
 interface Transporter {
     generateUploadURL: (id: string) => Promise<string>,
     terminate: (id: string, terminationCode:string) => Promise<void>,
-    injectHeavyRequestBody: (id: string) => Promise<PayloadResponse>,
+    injectHeavyRequestBody: (id: string) => Promise<Payload>,
     handleHeavyResponseBody: (id: string, content: Buffer, contentType: string | null) => Promise<string>,
 }
 
