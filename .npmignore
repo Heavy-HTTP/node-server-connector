@@ -1,2 +1,5 @@
-src
+/src
 jest.config.js
+node_modules
+/lib
+/coverage
