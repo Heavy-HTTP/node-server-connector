@@ -394,7 +394,7 @@ describe('connector-request handler test suite ', () => {
     request.emit('data', 'testData')
     request.emit('other', 'testOtherData')
     expect(eventArray).toStrictEqual(['data', 'other']);
-    expect(dataArray).toStrictEqual(['testData', 'testOtherData']);
+    expect(dataArray).toStrictEqual(['returnData','testOtherData']);
     expect(request.rawHeaders).toStrictEqual(['content-length', 10, null, 'content-type', 'test-type']);
   });
 

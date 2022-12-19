@@ -128,11 +128,11 @@ export const connector = (connectorConfig: ConnectorConfig, transporter: Transpo
                         req.headers['content-type'] = item.contentType;
 
                         for (let i = 0; i < req.rawHeaders.length; i++) {
-                            if (req.rawHeaders[i]?.toLowerCase() === 'content-length') {
+                            if (req.rawHeaders[i]?.toString().toLowerCase() === 'content-length') {
                                 req.rawHeaders[i + 1] = item.contentLength;
                             }
 
-                            if (req.rawHeaders[i]?.toLowerCase() === 'content-type') {
+                            if (req.rawHeaders[i]?.toString().toLowerCase() === 'content-type') {
                                 req.rawHeaders[i + 1] = item.contentType;
                             }
                         }
